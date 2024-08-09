@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+
+import rospy
+from geometry_msgs.msg import Twist, Pose, Point, QuaternionStamped
+from sensor_msgs.msg import Joy
+
+import serial
+import os
+import numpy as np
+import time
+import threading
+
+class MotorControlNode:
+    SERIAL_PORT = '/dev/ttyACM1'
+
+    def __init__(self):
+        rospy.init_node('motor_joy_teleop', anonymous=True)
+        self.gripper_pose_sub = rospy.Subscriber("/gripper_pose", Pose, self.gripper_pose_callback)
+        self.target_pose_sub = rospy.Subscriber("/target_pose", Pose, self.target_pose_callback)
+        self.gripper_xyz = np.zeros(3)
+        self.target_xyz = np.zeros(3)
+        self.serial_cmd = "300 300 300 300"
+        self.prev_serial_cmd = "300 300 300 300"
+
+        # checking serial port
+        if not os.path.exists(self.SERIAL_PORT):
+            rospy.logerr("Serial Port not found: " + self.SERIAL_PORT + " motor_joy_teleop not started")
+            rospy.signal_shutdown("Serial Port not found")
+        self.ser = serial.Serial(self.SERIAL_PORT, 115200, timeout=None)  # open serial port with blocking
+        self.send_serial("")  # Send to clear out any noise in the serial buffer
+
+        # publisher and subscriber
+        self.twist_subscriber = rospy.Subscriber("base/cmd_vel", Twist, self.send_cmd_vel, queue_size=50)
+        self.joy_subscriber = rospy.Subscriber("/joy", Joy, self.get_joy, queue_size=10)
+        self.tension_publisher = rospy.Publisher('tension', QuaternionStamped, queue_size=10)
+        self.pwm_publisher = rospy.Publisher('pwm', QuaternionStamped, queue_size=10)
+
+        rospy.loginfo("motor_joy_teleop has started")
+        self.serial_thread = threading.Thread(target=self.serial_read)
+        self.serial_thread.daemon = True
+        self.serial_thread.start()
+
+    def gripper_pose_callback(self, msg):
+        #print("In callback: ", msg)
+        self.gripper_xyz[0] = msg.position.x
+        self.gripper_xyz[1] = msg.position.y
+        self.gripper_xyz[2] = msg.position.z
+
+    def target_pose_callback(self, msg):
+        self.target_xyz[0] = msg.position.x
+        self.target_xyz[1] = msg.position.y
+        self.target_xyz[2] = msg.position.z
+
+    def send_serial(self, send):
+        self.ser.write((send + "\n").encode())
+
+    def send_cmd_vel(self, msg):
+        rospy.loginfo("Twist: Linear velocity: %f Angular velocity: %f" % (msg.linear.x, msg.angular.z))
+
+    def get_joy(self, joy_msg):
+
+        trigger_left = 1 if joy_msg.axes[2] != 1 else 0
+        trigger_right = 1 if joy_msg.axes[5] != 1 else 0
+        bumper_left = joy_msg.buttons[4]
+        bumper_right = joy_msg.buttons[5]
+        self.parameter = trigger_left + (trigger_right << 1) + (bumper_left << 2) + (bumper_right << 3)
+        if joy_msg.buttons[0]: # A is pressed
+            tension = [800, 950, 1100, 1250, 1400][self.parameter]
+            print(f"STEP RESPONSE X #{self.parameter}: {tension}")
+            self.serial_cmd = f'500 500 {tension} {tension}'
+        elif joy_msg.buttons[1]: # B is pressed
+            tension = [800, 950, 1100, 1250, 1400][self.parameter]
+            print(f"STEP RESPONSE Y #{self.parameter}: {tension}")
+            self.serial_cmd = f'500 {tension} {tension} 500'
+        elif joy_msg.buttons[2]: # X is pressed
+            period = [0.5, 0.75, 1, 2, 3][self.parameter]
+            def send(angle, amplitude=1):
+                """Command the robot to go to the position specified by angle and amplitude (polar coordinates)"""
+                tensions = np.array([np.cos(angle), np.sin(angle), -np.cos(angle), -np.sin(angle)])
+                tensions = 500 + 300 * tensions * amplitude
+                tensions = tensions.round().astype(int)  # Round and convert to integer array
+                self.serial_cmd = '{} {} {} {}'.format(*tensions)  # Format as string with tensions separated by spaces
+                self.send_serial(self.serial_cmd)
+            print(f"SINE RESPONSE #{self.parameter}: {period}")
+            send(0) # 0 degree angle at full amplitude
+            time.sleep(0.3) # Give time for the robot to reach the first position in the sine
+            for t in np.arange(0, 3 * period, 0.1):
+                send(t / period * 2 * np.pi)
+                time.sleep(0.1) # Send commands every 0.1s
+            time.sleep(0.3) # Pause before returning to center
+            send(0, 0) # Return to the center
+        elif joy_msg.buttons[3]: # Y is pressed
+            seed = [0, 1, 2, 3, 4][self.parameter]
+            np.random.seed(seed)
+            def send(amplitudes):
+                tensions = 500 + 700 * amplitudes
+                tensions = tensions.round().astype(int)  # Round and convert to integer array
+                self.serial_cmd = '{} {} {} {}'.format(*tensions)  # Format as string with tensions separated by spaces
+                self.send_serial(self.serial_cmd)
+            for t in np.arange(0, 60, 0.4):
+               send(np.random.random(4))
+               time.sleep(0.4)
+            send(np.array([0, 0, 0, 0]  ))
+        else:
+            # Since wave command
+            tensions = np.array([joy_msg.axes[0], joy_msg.axes[1], -joy_msg.axes[0], -joy_msg.axes[1]])
+            tensions = 500 + 400 * tensions
+            tensions = tensions.round().astype(int)  # Round and convert to integer array
+            self.serial_cmd = '{} {} {} {}'.format(*tensions)  # Format as string with tensions separated by spaces
+
+
+    def process_serial(self, line):
+        """Read tensions and motor PWMs from the serial monitor."""
+        values = line.split(',')
+        if len(values) == 9:
+            tension = QuaternionStamped()
+            tension.header.stamp = rospy.Time.now()
+            tension.quaternion.x = float(values[0])
+            tension.quaternion.y = float(values[1])
+            tension.quaternion.z = float(values[2])
+            tension.quaternion.w = float(values[3])
+            self.tension_publisher.publish(tension)
+            pwm = QuaternionStamped()
+            pwm.header.stamp = rospy.Time.now()
+            pwm.quaternion.x = float(values[4])
+            pwm.quaternion.y = float(values[5])
+            pwm.quaternion.z = float(values[6])
+            pwm.quaternion.w = float(values[7])
+            self.pwm_publisher.publish(pwm)
+
+    def serial_read(self):
+        """Loop continuously, printing lines from serial whenever they are received."""
+        while True:
+            line = self.ser.readline()
+            try:
+                line = line.decode().strip()
+                self.process_serial(line)
+                if ',' not in line:
+                    print('Serial read', line)
+            except Exception as e:
+                print('rubbish', line, e)
+
+    def run(self):
+        if self.serial_cmd != self.prev_serial_cmd:
+            # serial command only get sent on changes, not continually
+            rospy.loginfo("Serial Command: " + self.serial_cmd)
+            self.send_serial(self.serial_cmd)
+            self.prev_serial_cmd = self.serial_cmd
+            time.sleep(0.1)  # Ensures messages are not sent too quickly
+
+def main():
+    node = MotorControlNode()
+    rate = rospy.Rate(1000)  # 1kHz
+    while not rospy.is_shutdown():
+        node.run()
+        rate.sleep()
+
+if __name__ == '__main__':
+    main()
