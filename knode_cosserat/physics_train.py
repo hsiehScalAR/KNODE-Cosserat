@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import argparse
 from knode import setup_robot, simulate
 from fastdtw import fastdtw
-from estimated_state import estimate_state
 from physics_controls import calc_controls
 from scipy.spatial.transform import Rotation
 import io
@@ -371,8 +370,11 @@ else:
 
         if epoch % 10 == 0 and args.verbose:
             print(f"Epoch {epoch} of {args.epochs}")
-            print(f"Total loss: {total_loss}, lr {scheduler.get_last_lr()}")
-        progress.set_description(f"loss: {total_loss:.2E}, lr {scheduler.get_last_lr()}")
+            # print(f"Total loss: {total_loss}, lr {scheduler.get_last_lr()}")
+            print(f"Total loss: {total_loss}")
+        #progress.set_description(f"loss: {total_loss:.2E}, lr {scheduler.get_last_lr()}")
+        progress.set_description(f"loss: {total_loss:.2E}")
+
 
         if epoch % 200 == 0 and args.eval:
             evaluate(robot if epoch != 0 else None)

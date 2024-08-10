@@ -15,7 +15,7 @@ import torch
 import argparse
 
 from preprocess import preprocessed
-from estimated_state import estimate_state
+from estimate_state import estimate_state
 
 # Number of seconds to trip from each bag file
 to_trim = {
