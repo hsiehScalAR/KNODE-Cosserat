@@ -1,10 +1,7 @@
 import numpy as np
 from scipy.linalg import logm, expm
 from sklearn.metrics import mean_squared_error
-from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
-from scipy.spatial.transform import Rotation as R
-from scipy.spatial.transform import Slerp
 from interpolate_curve import fit_curve
 
 def compute_R_spatial_derivative(R_matrices, arc_lengths):

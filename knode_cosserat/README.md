@@ -1,8 +1,5 @@
 # Continuum Robot
 
-Arduino code is in the `tom` folder. ROS code is in `ros2_ws/src`.
-
-To run the analysis, the soft-knode codebase needs to be located at an adjacent folder named `Soft-KNODE`.
   - `knode.py`: Evaluation
   - `knode_train.py`: Training
   - `knode_multitrain.py`: Mutli-train and multi-evaluation
