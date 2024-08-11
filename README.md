@@ -10,9 +10,8 @@ In ```\firmware``` we provide the Arduino code for the tendon-driven robot in C+
 ## ROS
 In ```\ros_ws``` we provide the code for a ROS node that can control the robot using a joystick in Python. The ROS node subscribes to the joystick and maps the commands to the tensions in each tendon. The commands are sent to the robot through a serial port. This code can be modified to send custom commands to the robot instead of reading from the joystick.
 
-## Training
-
-
+## KNODE Cosserat Training
+We separate the training of simulated robot and real-world robot into the folders ```\knode_cosserat``` and ```\knode_cosserat_realworld```. Instructions to run the training pipeline can be found in the README in these respective folders. 
 
 ## Citation
 If you find any part of this repository useful and/or use it in your research, please the following publications:
