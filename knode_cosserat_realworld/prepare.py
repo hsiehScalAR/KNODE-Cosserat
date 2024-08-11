@@ -15,7 +15,6 @@ import torch
 import argparse
 
 from preprocess import preprocessed
-from estimate_state import estimate_state
 
 # Number of seconds to trip from each bag file
 to_trim = {
@@ -311,7 +310,6 @@ if __name__ == '__main__':
         data = np.load(f'datas/{os.path.basename(args.experiment)}.npy', allow_pickle=True).item()
         controls = data['controls']
         interpolated = data['interpolated']
-        estimated = data['estimated']
         ts = data['t']
 
         trajectory = simulate(robot, controls)
@@ -319,7 +317,6 @@ if __name__ == '__main__':
     elif args.model is None:
         ts, controls, interpolated, pos, ori = read_bag(args.experiment)
         trajectory = simulate(robot, controls)
-        estimated = estimate_state(interpolated[:,:7, :], controls, robot)
 
         np.save(f'datas/{os.path.basename(args.experiment)}.npy', {
             "t": ts,
@@ -331,7 +328,6 @@ if __name__ == '__main__':
             # "link2": positions[3],
             # "link3": positions[4],
             "interpolated": interpolated,
-            "estimated": estimated,
             "positions": pos,
             "orientation": ori,
         })
@@ -372,35 +368,6 @@ if __name__ == '__main__':
     plt.plot(ts, interpolated[:, 6, 9], label='Z measured', color='cyan')
     plt.ylabel('Position (m)')
     plt.legend()
-
-    plt.figure(figsize=(10, 9))
-    plt.suptitle('estimated v')
-    for i in range(robot.N):
-        plt.subplot(robot.N, 1, i+1)
-        plt.plot(estimated[:,19:22,i], marker='.')
-    plt.tight_layout(h_pad=0.1)
-
-    plt.figure(figsize=(10, 9))
-    plt.suptitle('estimated n')
-    for i in range(robot.N):
-        plt.subplot(robot.N, 1, i+1)
-        plt.plot(estimated[:,7:10,i], marker='.')
-    plt.tight_layout(h_pad=0.1)
-
-    est_pred = estimate_state(trajectory[:,:7, :], controls, robot)
-    plt.figure(figsize=(10, 9))
-    plt.suptitle('estimated n on predicted')
-    for i in range(robot.N):
-        plt.subplot(robot.N, 1, i+1)
-        plt.plot(est_pred[:,7:10,i], marker='.')
-    plt.tight_layout(h_pad=0.1)
-
-    plt.figure(figsize=(10, 9))
-    plt.suptitle('predicted n')
-    for i in range(robot.N):
-        plt.subplot(robot.N, 1, i+1)
-        plt.plot(trajectory[:,7:10,i], marker='.')
-    plt.tight_layout(h_pad=0.1)
 
     # estimated_state_traj = estimate_state(trajectory[:,:7, :], controls, robot)
     #

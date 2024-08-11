@@ -9,6 +9,8 @@ from fastdtw import fastdtw
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
+import os
+import sys
 
 parser = argparse.ArgumentParser(description='Train and Evaluate Multiple Models.')
 parser.add_argument('--train', action=argparse.BooleanOptionalAction, default=True)
@@ -93,7 +95,9 @@ class Train(Thread):
         self.seed = seed
 
     def run(self):
-        cmd = ['python', '-u', 'physics_train.py', '--verbose', '--no-eval', '--epochs', str(args.epochs), '--seed', str(self.seed)]
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, 'physics_train.py')
+        cmd = [sys.executable, '-u', filename, '--verbose', '--no-eval', '--epochs', str(args.epochs), '--seed', str(self.seed)]
         if self.mod is not None:
             cmd.extend(['--mod', self.mod])
         if args.original:

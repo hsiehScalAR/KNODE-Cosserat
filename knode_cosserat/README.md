@@ -1,8 +1,7 @@
 # Continuum Robot
 
-  - `knode.py`: Evaluation
-  - `knode_train.py`: Training
-  - `knode_multitrain.py`: Mutli-train and multi-evaluation
+  - `physics_train.py`: Training
+  - `physics_multitrain.py`: Mutli-train and multi-evaluation
   - `physics_train.py`: Experiments on training on simulated trajectories instead of real-world data
 
 The `*.bag` files from physical experiments should be placed at a folder called `physical_experiment_data` next to the python files.
