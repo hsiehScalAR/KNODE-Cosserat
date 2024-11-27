@@ -256,7 +256,7 @@ if __name__ == '__main__':
 
     ref_robot = CosseratRod()
     measured_loc = [0, 3.23, 5.13, 7.07, 9]  # measurement location ratios have big impact on interpolation results
-    real_data_partial_state = np.load(f'data/real_physical/{dataname}.bag.npy', allow_pickle=True).item()
+    real_data_partial_state = np.load(f'datas/{dataname}.bag.npy', allow_pickle=True).item()
     print("data keys: ", real_data_partial_state.keys())
     real_data_ori = np.array(real_data_partial_state['orientation']).swapaxes(0, 1).swapaxes(1,2)
     # real_data_pos = np.array(real_data_partial_state['positions']).swapaxes(0, 1).swapaxes(1,2)
@@ -276,44 +276,44 @@ if __name__ == '__main__':
     real_data_traj_full_state = estimate_state(real_data_traj_full_grid, real_data_controls, ref_robot)
 
     #real_data_traj_full_state = estimate_state(real_data_partial_state['interpolated'][:300], real_data_controls[:300], ref_robot)
-    np.save(f'data/real_physical/{dataname}_estimated.npy',
+    np.save(f'datas/{dataname}_estimated.npy',
             {"traj":real_data_traj_full_state, "controls": real_data_controls})
 
-    sim_data1 = np.load('data/sim_sin_1_0_amp_300.npy', allow_pickle=True).item()
+    # sim_data1 = np.load('data/sim_sin_1_0_amp_300.npy', allow_pickle=True).item()
 
 
-    # plot the two trajectories side by side
-    fig = plt.figure()
-    ax_titles = ['x', 'y', 'z', 'h0', 'h1', 'h2', 'h3', 'n1', 'n2', 'n3', 'm1', 'm2', 'm3',
-                 'q1', 'q2', 'q3', 'w1', 'w2', 'w3', 'v1', 'v2', 'v3', 'u1', 'u2', 'u3']
+    # # plot the two trajectories side by side
+    # fig = plt.figure()
+    # ax_titles = ['x', 'y', 'z', 'h0', 'h1', 'h2', 'h3', 'n1', 'n2', 'n3', 'm1', 'm2', 'm3',
+    #              'q1', 'q2', 'q3', 'w1', 'w2', 'w3', 'v1', 'v2', 'v3', 'u1', 'u2', 'u3']
 
-    for i in range(25):
-        ax = fig.add_subplot(5, 5, i+1)
-        ax.plot(real_data_traj_full_state[:plot_len, i, plot_grid_idx], 'r', label='read estimate')
-        ax.plot(sim_data1['traj'][:, :25][:plot_len, i, plot_grid_idx], 'b', label='sim')
-        ax.set_title(ax_titles[i])
-        ax.legend()
+    # for i in range(25):
+    #     ax = fig.add_subplot(5, 5, i+1)
+    #     ax.plot(real_data_traj_full_state[:plot_len, i, plot_grid_idx], 'r', label='read estimate')
+    #     ax.plot(sim_data1['traj'][:, :25][:plot_len, i, plot_grid_idx], 'b', label='sim')
+    #     ax.set_title(ax_titles[i])
+    #     ax.legend()
 
 
 
-    # the second grid [pos=1] of x, y, z are not good (estimated too large), the rest are ok. z not good overall for lower grids
-    # overall h is good but phase is off, h0's beginning has jumps, h1-h3's roots are hardcoded to 0. h3 is crap
-    # v1 v2 are very good, v3 is good (v3 is derived from n3)
-    # n1 n2 are very good, n3 is good (simulated n3 is a lot noisier)
-    # m's values rise too slowly from the tip to root, but shape is good
-    state_idx = 13
-    fig1 = plt.figure()
-    ax1_titles = []
-    for i in range(10):
-        ax1_titles.append("grid"+str(i))
+    # # the second grid [pos=1] of x, y, z are not good (estimated too large), the rest are ok. z not good overall for lower grids
+    # # overall h is good but phase is off, h0's beginning has jumps, h1-h3's roots are hardcoded to 0. h3 is crap
+    # # v1 v2 are very good, v3 is good (v3 is derived from n3)
+    # # n1 n2 are very good, n3 is good (simulated n3 is a lot noisier)
+    # # m's values rise too slowly from the tip to root, but shape is good
+    # state_idx = 13
+    # fig1 = plt.figure()
+    # ax1_titles = []
+    # for i in range(10):
+    #     ax1_titles.append("grid"+str(i))
 
-    print("Another: ", real_data_traj_full_state.shape, sim_data1['traj'].shape)
+    # print("Another: ", real_data_traj_full_state.shape, sim_data1['traj'].shape)
 
-    for i in range(10):
-        ax1 = fig1.add_subplot(10,1,i+1)
-        ax1.plot(real_data_traj_full_state[:plot_len, state_idx, i], 'r', label='real estimate')
-        ax1.plot(sim_data1['traj'][:, :25][:plot_len, state_idx, i], 'b', label='sim')
-        ax1.set_title(ax_titles[state_idx] + ' ' + ax1_titles[i])
-        ax1.legend()
+    # for i in range(10):
+    #     ax1 = fig1.add_subplot(10,1,i+1)
+    #     ax1.plot(real_data_traj_full_state[:plot_len, state_idx, i], 'r', label='real estimate')
+    #     ax1.plot(sim_data1['traj'][:, :25][:plot_len, state_idx, i], 'b', label='sim')
+    #     ax1.set_title(ax_titles[state_idx] + ' ' + ax1_titles[i])
+    #     ax1.legend()
 
-    plt.show()
+    # plt.show()

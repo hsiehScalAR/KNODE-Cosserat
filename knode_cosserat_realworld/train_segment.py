@@ -44,30 +44,30 @@ batch_len = args.train_len
 #                 'data/real_param_sine35_traj_100_steps_10_grid_damp_3e-2.npy',
 #                 'data/real_param_sine40_traj_100_steps_10_grid_damp_3e-2.npy']
 
-data_path_ls = ['data/real_physical/sin_1_0_amp_300_estimated.npy'] # first 50 steps are already trimmed
+data_path_ls = ['datas/sin_1_0_amp_300_estimated.npy'] # first 50 steps are already trimmed
 if args.data == 'sinesine':
     data_path_ls = [
-        'data/real_physical/sin_1_0_amp_300_estimated.npy',
-        'data/real_physical/sin_3_0_amp_300_estimated.npy',
+        'datas/sin_1_0_amp_300_estimated.npy',
+        'datas/sin_3_0_amp_300_estimated.npy',
     ]
 if args.data == 'sinesinerand':
     data_path_ls = [
-        'data/real_physical/sin_1_0_amp_300_estimated.npy',
-        'data/real_physical/sin_3_0_amp_300_estimated.npy',
-        'data/real_physical/rand_0_60s_estimated.npy',
+        'datas/sin_1_0_amp_300_estimated.npy',
+        'datas/sin_3_0_amp_300_estimated.npy',
+        'datas/rand_0_60s_estimated.npy',
     ]
 if args.data == 'sinesinestep':
     data_path_ls = [
-        'data/real_physical/sin_1_0_amp_300_estimated.npy',
-        'data/real_physical/sin_3_0_amp_300_estimated.npy',
-        'data/real_physical/dir_a_tension_950_estimated.npy',
+        'datas/sin_1_0_amp_300_estimated.npy',
+        'datas/sin_3_0_amp_300_estimated.npy',
+        'datas/dir_a_tension_950_estimated.npy',
     ]
 if args.data == 'sinesinestepstep':
     data_path_ls = [
-        'data/real_physical/sin_1_0_amp_300_estimated.npy',
-        'data/real_physical/sin_3_0_amp_300_estimated.npy',
-        'data/real_physical/dir_a_tension_950_estimated.npy',
-        'data/real_physical/dir_a_tension_1250_estimated.npy',
+        'datas/sin_1_0_amp_300_estimated.npy',
+        'datas/sin_3_0_amp_300_estimated.npy',
+        'datas/dir_a_tension_950_estimated.npy',
+        'datas/dir_a_tension_1250_estimated.npy',
     ]
 
 # extracting training data
